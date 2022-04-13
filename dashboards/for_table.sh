@@ -1,6 +1,6 @@
 #!/bin/bash
 main() {
-	local host=`grep -oPm1 "(?<=hostname = \")([^%]+)(?=\"$)" /etc/telegraf/telegraf.conf`
+	local host=`grep "hostname" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	local ip=`wget -qO- eth0.me`
 	local n_cpus=`grep processor /proc/cpuinfo | wc -l`
 	
