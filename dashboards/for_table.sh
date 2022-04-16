@@ -34,7 +34,7 @@ main() {
 	local cpu_usage_percent=`bc -l <<< "($time_total-$time_idle_d)/$time_total*100"`
 	local ram_used_percent=`bc -l <<< "(1-$ram_available/$ram_total)*100"`
 	local drive_used_percent=`bc -l <<< "$drive_used/($drive_used+$drive_available)*100"`
-	printf "for_table,host=%q,ip=$ip n_cpus=$n_cpus,ram_total=$ram_total,drive_total=$drive_total,load15=$load15,cpu_usage_percent=$cpu_usage_percent,ram_used_percent=$ram_used_percent,drive_used_percent=$drive_used_percent" "$host"
+	printf "for_table,host=%q,ip=$ip n_cpus=$n_cpus,ram_total=$ram_total,drive_total=$drive_total,load15=$load15,cpu_usage_percent=$cpu_usage_percent,ram_used_percent=$ram_used_percent,drive_used_percent=$drive_used_percent\n" "$host"
 }
 
 main
