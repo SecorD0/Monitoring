@@ -7,9 +7,10 @@ main() {
 	local ram_total=`bc -l <<< "$(awk 'NR == 1 {printf $2}' /proc/meminfo)*1024"`
 	local ram_available=`bc -l <<< "$(awk 'NR == 3 {printf $2}' /proc/meminfo)*1024"`
 	
-	local drive_total=`bc -l <<< "$(df / | awk 'NR == 2 {printf $2}')*1024"`
-	local drive_used=`bc -l <<< "$(df / | awk 'NR == 2 {printf $3}')*1024"`
-	local drive_available=`bc -l <<< "$(df / | awk 'NR == 2 {printf $4}')*1024"`
+	local drives_info=`df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs -t swap --total 2>/dev/null | grep total`
+	local drive_total=`bc -l <<< "$(awk '{ print $2 }' <<< "$drives_info")*1024"`
+	local drive_used=`bc -l <<< "$(awk '{ print $3 }' <<< "$drives_info")*1024"`
+	local drive_available=`bc -l <<< "$(awk '{ print $4 }' <<< "$drives_info")*1024"`
 	
 	local load15=`awk '{printf $3}' /proc/loadavg`
 	
