@@ -5,7 +5,8 @@ main() {
 	local n_cpus=`grep processor /proc/cpuinfo | wc -l`
 	
 	local ram_total=`bc -l <<< "$(grep "MemTotal" /proc/meminfo | awk '{printf $2}')*1024"`
-	local ram_available=`bc -l <<< "$(grep "MemAvailable" /proc/meminfo | awk '{printf $2}')*1024"`
+	local ram_free=`bc -l <<< "$(grep "MemFree" /proc/meminfo | awk '{printf $2}')*1024"`
+	local ram_buffers=`bc -l <<< "$(grep "Buffers" /proc/meminfo | awk '{printf $2}')*1024"`
 	local ram_cached=`bc -l <<< "$(grep "^Cached" /proc/meminfo | awk '{printf $2}')*1024"`
 	
 	local drives_info=`df -t simfs -t ext2 -t ext3 -t ext4 -t btrfs -t xfs -t vfat -t ntfs -t swap --total 2>/dev/null | grep total`
@@ -34,7 +35,7 @@ main() {
 	local time_total=$((time_user_d+time_nice_d+time_system_d+time_idle_d))
 	
 	local cpu_usage_percent=`bc -l <<< "($time_total-$time_idle_d)/$time_total*100"`
-	local ram_used_percent=`bc -l <<< "($ram_total-$ram_available-$ram_cached)/$ram_total*100"`
+	local ram_used_percent=`bc -l <<< "($ram_total-$ram_free-$ram_buffers-$ram_cached)/$ram_total*100"`
 	local drive_used_percent=`bc -l <<< "$drive_used/($drive_used+$drive_available)*100"`
 	printf "for_table,host=%q,ip=$ip n_cpus=$n_cpus,ram_total=$ram_total,drive_total=$drive_total,load15=$load15,cpu_usage_percent=$cpu_usage_percent,ram_used_percent=$ram_used_percent,drive_used_percent=$drive_used_percent\n" "$host"
 }
