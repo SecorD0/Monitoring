@@ -12,6 +12,7 @@ telegraf_action="false"
 server_name=""
 influxdb_url="http://localhost:8086"
 
+json_file="$HOME/dashboard.json"
 json_url=""
 
 function="install"
@@ -40,8 +41,8 @@ while test $# -gt 0; do
 		echo -e "  -t,  --telegraf    install Telegraf"
 		echo -e "  -sn                server name for Telegraf config"
 		echo -e "  -iu                InfluxDB URL to connect Telegraf (default is ${C_LGn}${influxdb_url}${RES})"
-		echo -e "  -id                import Grafana dashboard"
-		echo -e "  -ju                JSON dashboard format URL"
+		echo -e "  -id                import Grafana dashboard from ${json_file} or from URL"
+		echo -e "  -ju                raw JSON dashboard URL"
 		echo -e "  -un, --uninstall   uninstall specified program(s) (must be used with one or more -g, -i, -t options)"
 		echo -e "  -c,  --completely  delete all data"
 		echo
@@ -275,9 +276,11 @@ The Telegraf was ${C_LGn}started${RES}.
 	fi
 }
 import_dashboard() {
-	if [ ! -n "$json_url" ]; then
-		printf_n "${C_R}You didn't specify JSON dashboard format URL via -ju option!${RES}"
-		return 1 2>/dev/null; exit 1
+	if [ ! -f "$json_file" ]; then
+		if [ ! -n "$json_url" ]; then
+			printf_n "${C_R}You didn't specify JSON dashboard format URL via -ju option!${RES}"
+			return 1 2>/dev/null; exit 1
+		fi
 	fi
 	
 	local grafana_user=""
