@@ -26,16 +26,16 @@ main() {
 			local rpc_port=8899
 		fi
 		local rpc_url="-u http://127.0.0.1:$rpc_port"
-		local is_syncing=`$daemon address $rpc_url`
-		if ! grep "tcp connect error" <<< "$is_syncing"; then
+		local is_syncing=`$daemon validators $rpc_url 2>&1`
+		if ! grep -q "tcp connect error" <<< "$is_syncing"; then
 			local is_syncing=""
+		else
+			local rpc_url=""
 		fi
 	else
 		local rpc_url=""
 	fi
-	
 	local validators=`$daemon validators $rpc_url --output json-compact`
-	
 	if [ ! -n "$identity_address" ]; then
 		local identity_address=`$daemon address $rpc_url 2>/dev/null`
 	fi
@@ -99,7 +99,7 @@ main() {
 	local block_production=`$daemon block-production $rpc_url --output json-compact`
 	local validator_block_production=`jq -r '.leaders[] | select(.identityPubkey == "'$identity_address'")' <<< "$block_production"`
 	local total_slots=`$daemon leader-schedule | grep $identity_address | wc -l`
-	if [ -n "validator_block_production" ]; then
+	if [ -n "$validator_block_production" ]; then
 		local passed_slots=`jq -r ".leaderSlots" <<< "$validator_block_production"`
 		local skipped_slots=`jq -r ".skippedSlots" <<< "$validator_block_production"`
 		local validator_skip_rate=`bc <<< "scale=3; 100*$skipped_slots/$passed_slots"`
