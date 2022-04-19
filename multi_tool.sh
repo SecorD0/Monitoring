@@ -280,7 +280,12 @@ import_dashboard() {
 		if [ ! -n "$json_url" ]; then
 			printf_n "${C_R}You didn't specify JSON dashboard format URL via -ju option!${RES}"
 			return 1 2>/dev/null; exit 1
+		else
+			sudo apt install curl -y &>/dev/null
+			echo '{"dashboard": '`wget -qO- "$json_url" | tr -d '\r'`', "folderId": 0, "overwrite": false}}' > $HOME/dashboard.json
 		fi
+	else
+		echo '{"dashboard": '`cat "$json_file" | tr -d '\r'`', "folderId": 0, "overwrite": false}}' > $HOME/dashboard.json
 	fi
 	
 	local grafana_user=""
@@ -305,8 +310,7 @@ import_dashboard() {
 		return 1 2>/dev/null; exit 1
 	fi
 	
-	sudo apt install curl -y &>/dev/null
-	echo '{"dashboard": '`wget -qO- "$json_url" | tr -d '\r'`', "folderId": 0, "overwrite": false}}' > $HOME/dashboard.json
+	printf_n
 	local response=`curl -su "${grafana_user}:${grafana_password}" -XPOST "http://localhost:3000/api/dashboards/db" -H "Content-Type: application/json" -d @$HOME/dashboard.json`
 	if grep -q '"status":"success"' <<< "$response"; then
 		printf_n "${C_LGn}Done!${RES}"
@@ -344,6 +348,7 @@ uninstall() {
 		sudo systemctl disable telegraf
 		sudo apt purge telegraf -y
 		. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/miscellaneous/insert_variable.sh) -n telegraf_log -da
+		rm -rf /etc/apt/sources.list.d/influxdb.list
 		if [ "$completely" == "true" ]; then
 			sudo userdel -rf telegraf
 			rm -rf $HOME/.monitoring/telegraf /etc/telegraf/
