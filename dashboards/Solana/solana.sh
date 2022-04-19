@@ -3,10 +3,11 @@
 daemon="$HOME/.local/share/solana/install/active_release/bin/solana"
 identity_address=""
 vote_address=""
-sqlite_db="solana.db"
+sqlite_db="$HOME/.monitoring/telegraf/solana.db"
 
 # Functions
 main() {
+	mkdir -p "$HOME/.monitoring/telegraf/"
 	local host=`grep "hostname" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	local influxdb_url=`grep "urls" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	local influxdb_database=`grep "database" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
@@ -114,7 +115,7 @@ main() {
 	local stake=`bc <<< "scale=3; $(jq -r ".activatedStake" <<< "$validator_info")/1000000000"`
 	
 	sqlite3 "$sqlite_db" "CREATE TABLE IF NOT EXISTS leader_slots (epoch INTEGER, slot INTEGER UNIQUE, reward REAL)"
-	for slot in `$daemon block-production $rpc_url -v  | grep $identity_address | grep -v SKIPPED | sed 1d | awk '{print $1}'`; do
+	for slot in `$daemon block-production $rpc_url -v | grep $identity_address | grep -v SKIPPED | sed 1d | awk '{print $1}'`; do
 		sqlite3 "$sqlite_db" "INSERT INTO leader_slots (epoch, slot) VALUES ($current_epoch, $slot)" 2>/dev/null
 	done
 	for check_slot in `sqlite3 "$sqlite_db" "SELECT slot FROM leader_slots WHERE reward IS NULL"`; do
@@ -123,6 +124,9 @@ main() {
 	done
 	local stake_reward=0
 	local slot_rewards=`sqlite3 "$sqlite_db" "SELECT SUM(reward) FROM leader_slots WHERE epoch=$current_epoch"`
+	if [ ! -n "$slot_rewards" ]; then
+		local slot_rewards=0
+	fi
 	local costs=`bc <<< "$credits*0.000005"`
 	local profit=`bc <<< "scale=3; $stake_reward+$slot_rewards-$costs"`
 	local profit_usd=`bc <<< "scale=3; $profit*$solana_price/1"`
