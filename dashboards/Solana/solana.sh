@@ -65,12 +65,15 @@ main() {
 	if [ ! -n "$hours_remaining" ]; then local hours_remaining=0; fi
 	if [ ! -n "$minutes_remaining" ]; then local minutes_remaining=0; fi
 	if [ ! -n "$seconds_remaining" ]; then local seconds_remaining=0; fi
-	local epoch_end_time=`bc <<< "($(date +%s)+$days_remaining*86400+$hours_remaining*3600+$minutes_remaining*60+$seconds_remaining)*1000"`
+	local epoch_end_time=`bc <<< "($(date +%s)+$days_remaining*86400+$hours_remaining*3600+$minutes_remaining*60+$seconds_remaining)*1000" 2>/dev/null`
 	
 	local solana_log=`tail -n10000 $HOME/solana/solana.log 2>/dev/null`
 	if [ -n "$solana_log" ]; then
 		local slots_remaining=`echo "$solana_log" | awk -v pattern="$(solana address).+within slot" '$0 ~ pattern {printf "%d\n", $18-$12}' | tail -1`
-		local leader_slot_time=`bc <<< "scale=0; $slots_remaining*0.5/1"`
+		local leader_slot_time=`bc <<< "scale=0; $slots_remaining*0.5/1" 2>/dev/null`
+		if [ ! -n "$leader_slot_time" ]; then
+			local leader_slot_time=0
+		fi
 	else
 		local leader_slot_time=0
 	fi
@@ -103,16 +106,16 @@ main() {
 	if [ -n "$validator_block_production" ]; then
 		local passed_slots=`jq -r ".leaderSlots" <<< "$validator_block_production"`
 		local skipped_slots=`jq -r ".skippedSlots" <<< "$validator_block_production"`
-		local validator_skip_rate=`bc <<< "scale=3; 100*$skipped_slots/$passed_slots"`
+		local validator_skip_rate=`bc <<< "scale=3; 100*$skipped_slots/$passed_slots" 2>/dev/null`
 	else
 		local passed_slots=0
 		local skipped_slots=0
 		local validator_skip_rate=0.000
 	fi
-	local cluster_skip_rate=`bc <<< "scale=3; 100*$(jq ".total_slots_skipped" <<< "$block_production")/$(jq ".total_slots" <<< "$block_production")"`
+	local cluster_skip_rate=`bc <<< "scale=3; 100*$(jq ".total_slots_skipped" <<< "$block_production")/$(jq ".total_slots" <<< "$block_production")" 2>/dev/null`
 	
 	local credits=`$daemon vote-account $vote_address | grep -oPm1 "(?<=credits/slots: )([^%]+)(?=/)"`
-	local stake=`bc <<< "scale=3; $(jq -r ".activatedStake" <<< "$validator_info")/1000000000"`
+	local stake=`bc <<< "scale=3; $(jq -r ".activatedStake" <<< "$validator_info")/1000000000" 2>/dev/null`
 	
 	sqlite3 "$sqlite_db" "CREATE TABLE IF NOT EXISTS leader_slots (epoch INTEGER, slot INTEGER UNIQUE, reward REAL)"
 	for slot in `$daemon block-production $rpc_url -v | grep $identity_address | grep -v SKIPPED | sed 1d | awk '{print $1}'`; do
@@ -127,9 +130,9 @@ main() {
 	if [ ! -n "$slot_rewards" ]; then
 		local slot_rewards=0
 	fi
-	local costs=`bc <<< "$credits*0.000005"`
-	local profit=`bc <<< "scale=3; $stake_reward+$slot_rewards-$costs"`
-	local profit_usd=`bc <<< "scale=3; $profit*$solana_price/1"`
+	local costs=`bc <<< "$credits*0.000005" 2>/dev/null`
+	local profit=`bc <<< "scale=3; $stake_reward+$slot_rewards-$costs" 2>/dev/null`
+	local profit_usd=`bc <<< "scale=3; $profit*$solana_price/1" 2>/dev/null`
 	
 	printf "solana,host=%q,identity=$identity_address,epoch=$current_epoch epoch_progress=$epoch_progress,epoch_end_time=$epoch_end_time,leader_slot_time=$leader_slot_time,status=\"$status\",version=\"$version\",validator_commission=$validator_commission,identity_balance=$identity_balance,vote_balance=$vote_balance,solana_price=$solana_price,total_slots=$total_slots,passed_slots=$passed_slots,skipped_slots=$skipped_slots,validator_skip_rate=$validator_skip_rate,cluster_skip_rate=$cluster_skip_rate,credits=$credits,stake=$stake,stake_reward=$stake_reward,slot_rewards=$slot_rewards,costs=$costs,profit=$profit,profit_usd=$profit_usd\n" "$host"
 	
@@ -145,8 +148,8 @@ main() {
 		local q_costs=`jq ".[0][7]" <<< "$previous_epoch_info"`
 		if [ "$q_stake_reward" -eq 0 2>/dev/null ]; then
 			local q_stake_reward=`$daemon vote-account $vote_address --with-rewards | grep -A2 "Epoch Rewards:" | tail -1 | awk '{print $3}' | grep -oE '[0-9]+.[0-9]+'`
-			local q_profit=`bc <<< "scale=3; $q_stake_reward+$q_slot_rewards-$q_costs"`
-			local q_profit_usd=`bc <<< "scale=3; $q_profit*$q_solana_price/1"`
+			local q_profit=`bc <<< "scale=3; $q_stake_reward+$q_slot_rewards-$q_costs" 2>/dev/null`
+			local q_profit_usd=`bc <<< "scale=3; $q_profit*$q_solana_price/1" 2>/dev/null`
 			printf "solana,host=%q,identity=$q_identity,epoch=$q_epoch stake_reward=$q_stake_reward,profit=$q_profit,profit_usd=$q_profit_usd $q_time\n" "$q_host"
 		fi
 	fi
