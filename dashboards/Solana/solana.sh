@@ -14,24 +14,25 @@ main() {
 	local influxdb_user=`grep "username" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	local influxdb_password=`grep "password" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	
-	local is_voting=`ps aux | grep solana-validator | grep "\-\-no\-voting"`
-	if [ -n "$is_voting" ]; then
+	local voting=`ps aux | grep solana-validator | grep "\-\-no\-voting"`
+	if [ -n "$voting" ]; then
 		echo "The validator isn't voting!"
 		exit 1
 	fi
 	
-	local is_running=`ps aux | grep solana-validator | grep "\-\-identity"`
-	if [ -n "$is_running" ]; then
+	local running=`ps aux | grep solana-validator | grep "\-\-identity"`
+	if [ -n "$running" ]; then
 		local rpc_port=`ps aux | grep solana-validator | grep -oPm1 "\-\-rpc\-port\s+\K[0-9]+"`
 		if [ ! -n "$rpc_port" ]; then
 			local rpc_port=8899
 		fi
 		local rpc_url="-u http://127.0.0.1:$rpc_port"
-		local is_syncing=`$daemon validators $rpc_url 2>&1`
-		if ! grep -q "tcp connect error" <<< "$is_syncing"; then
-			local is_syncing=""
-		else
-			local rpc_url=""
+		local cluster_slot=`$daemon slot`
+		local validator_slot=`$daemon slot $rpc_url`
+		local diff=$((cluster_slot-validator_slot))
+		if [ "$diff" -ge 10 ]; then
+			local syncing="true"
+			local rpc_url=""			
 		fi
 	else
 		local rpc_url=""
@@ -79,8 +80,8 @@ main() {
 	fi
 	
 	local validator_info=`jq -r '.validators[] | select(.voteAccountPubkey == "'$vote_address'")' <<< "$validators"`
-	if [ -n "$is_running" ]; then
-		if [ -n "$is_syncing" ]; then 
+	if [ -n "$running" ]; then
+		if [ -n "$syncing" ]; then
 			local status="Syncing"
 		elif [ `jq -r ".delinquent" <<< "$validator_info"` = "false" ]; then
 			local status="Running"
