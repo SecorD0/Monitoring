@@ -52,7 +52,7 @@ main() {
 		exit 1
 	fi
 	
-	local epoch_info=`$daemon epoch-info $rpc_url`
+	local epoch_info=`$daemon epoch-info`
 	local current_epoch=`grep "Epoch:" <<< "$epoch_info" | awk '{print $(NF)}'`
 	local epoch_progress=`grep "Epoch Completed Percent:" <<< "$epoch_info" | awk '{print $(NF)}' | tr -d '%'`
 	
