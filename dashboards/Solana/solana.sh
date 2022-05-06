@@ -143,13 +143,13 @@ main() {
 		local q_host=`jq ".[0][1]" <<< "$previous_epoch_info" | tr -d '"'`
 		local q_identity=`jq ".[0][2]" <<< "$previous_epoch_info" | tr -d '"'`
 		local q_epoch=`jq ".[0][3]" <<< "$previous_epoch_info" | tr -d '"'`
-		local q_solana_price=`jq ".[0][4]" <<< "$previous_epoch_info"`
-		local q_stake_reward=`jq ".[0][5]" <<< "$previous_epoch_info"`
-		local q_slot_rewards=`jq ".[0][6]" <<< "$previous_epoch_info"`
-		local q_costs=`jq ".[0][7]" <<< "$previous_epoch_info"`
-		if [ "$q_stake_reward" -eq 0 2>/dev/null ]; then
+		local q_solana_price=`printf "%f" $(jq ".[0][4]" <<< "$previous_epoch_info")`
+		local q_stake_reward=`printf "%f" $(jq ".[0][5]" <<< "$previous_epoch_info")`
+		local q_slot_rewards=`printf "%f" $(jq ".[0][6]" <<< "$previous_epoch_info")`
+		local q_costs=`printf "%f" $(jq ".[0][7]" <<< "$previous_epoch_info")`
+		if (( `bc -l <<< "$q_stake_reward == 0"` )); then
 			local q_stake_reward=`$daemon vote-account $vote_address --with-rewards | grep -A2 "Epoch Rewards:" | tail -1 | awk '{print $3}' | grep -oE '[0-9]+.[0-9]+'`
-			local q_profit=`bc <<< "scale=3; $q_stake_reward+$q_slot_rewards-$q_costs" 2>/dev/null`
+			local q_profit=`bc <<< "scale=3; $q_stake_reward+$q_slot_rewards-$q_costs"`
 			local q_profit_usd=`bc <<< "scale=3; $q_profit*$q_solana_price/1" 2>/dev/null`
 			printf "solana,host=%q,identity=$q_identity,epoch=$q_epoch stake_reward=$q_stake_reward,profit=$q_profit,profit_usd=$q_profit_usd $q_time\n" "$q_host"
 		fi
