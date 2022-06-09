@@ -123,7 +123,10 @@ main() {
 		sqlite3 "$sqlite_db" "INSERT INTO leader_slots (epoch, slot) VALUES ($current_epoch, $slot)" 2>/dev/null
 	done
 	for check_slot in `sqlite3 "$sqlite_db" "SELECT slot FROM leader_slots WHERE reward IS NULL"`; do
-		local slot_reward=`$daemon block $check_slot | grep $identity_address | grep "%" | awk '{print $3}' | grep -oE '[0-9]+.[0-9]+' | paste -sd+ | bc`
+		local slot_reward=`$daemon block $check_slot 2>/dev/null | grep $identity_address | grep "%" | awk '{print $3}' | grep -oE '[0-9]+.[0-9]+' | paste -sd+ | bc`
+		if [ ! -n "$slot_reward" ]; then
+			local slot_reward=`sqlite3 "$sqlite_db" "SELECT avg(reward) FROM leader_slots"`
+		fi
 		sqlite3 "$sqlite_db" "UPDATE leader_slots SET reward=$slot_reward WHERE slot='$check_slot'"
 	done
 	local stake_reward=0
