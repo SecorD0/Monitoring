@@ -1,5 +1,8 @@
 # Changelog
 
+### 05.07.2022
+- If script can't get a stake reward for the last epoch, it counts as zero.
+
 ### 08.06.2022
 - If it failed to get the size of the block reward, it sets the average value from the DB.
 
