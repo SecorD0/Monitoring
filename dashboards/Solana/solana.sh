@@ -101,6 +101,9 @@ main() {
 	fi
 	
 	local solana_price=`wget -qO- https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT | jq -r ".price"`
+	if [ ! -n "$solana_price" ]; then
+		local solana_price=`. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/parsers/token_price.sh) -ts sol`
+	fi
 	local block_production=`$daemon block-production $rpc_url --output json-compact`
 	local validator_block_production=`jq -r '.leaders[] | select(.identityPubkey == "'$identity_address'")' <<< "$block_production"`
 	local total_slots=`$daemon leader-schedule | grep $identity_address | wc -l`
