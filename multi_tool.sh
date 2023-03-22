@@ -265,7 +265,9 @@ EOF
 		rm -rf $HOME/.monitoring/telegraf/telegraf.conf
 		ln -s /etc/telegraf/telegraf.conf $HOME/.monitoring/telegraf/telegraf.conf
 		sudo usermod -aG docker telegraf
+		sudo usermod -aG docker _telegraf
 		sudo -- bash -c 'echo "telegraf ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers'
+		sudo -- bash -c 'echo "_telegraf ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers'
 		sudo systemctl restart telegraf
 		. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/miscellaneous/insert_variable.sh) -n telegraf_log -v "sudo journalctl -fn 100 -u telegraf" -a
 		. <(wget -qO- https://raw.githubusercontent.com/SecorD0/utils/main/logo.sh)
