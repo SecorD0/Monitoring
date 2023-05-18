@@ -1,5 +1,8 @@
 # Changelog
 
+### 18.05.2023
+- Prevent the script stucking because of the `solana vote-account ... --with-rewards` command stucking.
+
 ### 05.07.2022
 - If script can't get a stake reward for the last epoch, it counts as zero.
 
