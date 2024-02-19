@@ -70,7 +70,7 @@ main() {
 	
 	local solana_log=`tail -n10000 $HOME/solana/solana.log 2>/dev/null`
 	if [ -n "$solana_log" ]; then
-		local slots_remaining=`echo "$solana_log" | awk -v pattern="$(solana address).+within slot" '$0 ~ pattern {printf "%d\n", $18-$12}' | tail -1`
+		local slots_remaining=`echo "$solana_log" | awk -v pattern="$($daemon address).+within slot" '$0 ~ pattern {printf "%d\n", $18-$12}' | tail -1`
 		local leader_slot_time=`bc <<< "scale=0; $slots_remaining*0.5/1" 2>/dev/null`
 		if [ ! -n "$leader_slot_time" ]; then
 			local leader_slot_time=0

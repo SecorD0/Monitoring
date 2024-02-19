@@ -1,5 +1,11 @@
 # Changelog
 
+### 19.02.2024
+- Replaced the alias of the binary file with the full path in one of the commands.
+
+### 27.09.2023
+- The table of rewards in the output of the `solana vote-account` command has been changed. The parsing logic of this data has been updated.
+
 ### 18.05.2023
 - Prevent the script stucking because of the `solana vote-account ... --with-rewards` command stucking.
 
@@ -10,7 +16,7 @@
 - If it failed to get the size of the block reward, it sets the average value from the DB.
 
 ### 06.05.2022
-- Fixed a bug with the editing of awards for the previous epoch.
+- Fixed a bug with the editing of rewards for the previous epoch.
 
 ### 05.05.2022
 - The algorithm for determining `Syncing` status was changed;
