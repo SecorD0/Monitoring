@@ -14,15 +14,15 @@ main() {
 	local influxdb_user=`grep "username" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	local influxdb_password=`grep "password" /etc/telegraf/telegraf.conf | grep -oPm1 "(?<=\")([^%]+)(?=\")"`
 	
-	local voting=`ps aux | grep solana-validator | grep "\-\-no\-voting"`
+	local voting=`ps aux | grep agave-validator | grep "\-\-no\-voting"`
 	if [ -n "$voting" ]; then
 		echo "The validator isn't voting!"
 		exit 1
 	fi
 	
-	local running=`ps aux | grep solana-validator | grep "\-\-identity"`
+	local running=`ps aux | grep agave-validator | grep "\-\-identity"`
 	if [ -n "$running" ]; then
-		local rpc_port=`ps aux | grep solana-validator | grep -oPm1 "\-\-rpc\-port\s+\K[0-9]+"`
+		local rpc_port=`ps aux | grep agave-validator | grep -oPm1 "\-\-rpc\-port\s+\K[0-9]+"`
 		if [ ! -n "$rpc_port" ]; then
 			local rpc_port=8899
 		fi

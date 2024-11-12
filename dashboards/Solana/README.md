@@ -1,5 +1,8 @@
 # Changelog
 
+### 12.11.2024
+- Changed the binaries from `solana` to `agave`.
+
 ### 19.02.2024
 - Replaced the alias of the binary file with the full path in one of the commands.
 
