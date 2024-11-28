@@ -1,5 +1,8 @@
 # Changelog
 
+### 28.11.2024
+- Applied TVC update changes.
+
 ### 12.11.2024
 - Changed the binaries from `solana` to `agave`.
 

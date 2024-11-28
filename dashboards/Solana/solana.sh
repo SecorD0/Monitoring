@@ -118,7 +118,7 @@ main() {
 	fi
 	local cluster_skip_rate=`bc <<< "scale=3; 100*$(jq ".total_slots_skipped" <<< "$block_production")/$(jq ".total_slots" <<< "$block_production")" 2>/dev/null`
 	
-	local credits=`$daemon vote-account $vote_address | grep -oPm1 "(?<=credits/slots: )([^%]+)(?=/)"`
+	local credits=`$daemon vote-account $vote_address | grep -oPm1 "(?<=credits/max credits: )([^%]+)(?=/)"`
 	local stake=`bc <<< "scale=3; $(jq -r ".activatedStake" <<< "$validator_info")/1000000000" 2>/dev/null`
 	
 	sqlite3 "$sqlite_db" "CREATE TABLE IF NOT EXISTS leader_slots (epoch INTEGER, slot INTEGER UNIQUE, reward REAL)"
@@ -137,7 +137,7 @@ main() {
 	if [ ! -n "$slot_rewards" ]; then
 		local slot_rewards=0
 	fi
-	local costs=`bc <<< "$credits*0.000005" 2>/dev/null`
+	local costs=`bc <<< "$credits*0.00000032" 2>/dev/null`
 	local profit=`bc <<< "scale=3; $stake_reward+$slot_rewards-$costs" 2>/dev/null`
 	local profit_usd=`bc <<< "scale=3; $profit*$solana_price/1" 2>/dev/null`
 	
